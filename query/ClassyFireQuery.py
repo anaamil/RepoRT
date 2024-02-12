@@ -10,77 +10,56 @@ def is_isomeric(smiles):
     return any(c in smiles for c in ['\\', '/', '@'])
 
 
-# def acceso_data_kingdom(kingdom):
-#     try:
-#         directory = glob("../processed_data/*/*_success.tsv")
-#         resultado = []
-#         for file in directory:
-#             df = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
-#             if "classyfire.kingdom" in df.columns:
-#                 query = df["classyfire.kingdom"].str.contains(kingdom, na=False)
-#                 if not df[query].empty and len(resultado) < 10 and is_isomeric(df['smiles.std'].iloc[0]):
-#                     resultado.append(df[query])
-#         if resultado:
-#             for i in resultado:
-#                 print(i)
-#         else:
-#             print(f'No se han encontrado coincidencias con {kingdom}')
-#     except Exception as e:
-#         print(f"Error:{e}")
-
-
-# def acceso_data_superclass(superclass):
-#     try:
-#         directory = glob("../processed_data/*/*_success.tsv")
-#         resultado = []
-#         for file in directory:
-#             df = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
-#             if "classyfire.superclass" in df.columns:
-#                 columna = df["classyfire.superclass"].str.lower()
-#                 query = columna.str.contains(superclass.lower(), na=False)
-#                 if not df[query].empty and len(resultado) < 10 and is_isomeric(df['smiles.std'].iloc[0]):
-#                     resultado.append(df[query])
-#         if resultado:
-#             for i in resultado:
-#                 print(i)
-#         else:
-#             print(f'No se han encontrado coincidencias con {superclass}')
-#     except Exception as e:
-#         print(f"Error:{e}")
-
-
-def acceso_metadata(file):
+def access_metadata(file):
     try:
-        ser = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
-        col_crom = ser['column.name']
-        return col_crom
+        met = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
+        return met
     except Exception as e:
         print(f"Error metadata:{e}")
 
 
-def acceso_data(patron):
+def access_gradient(file):
+    try:
+        gra = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
+        return gra
+    except Exception as e:
+        print(f"Error gradient data:{e}")
+
+
+def access_data(pattern, location=".*"):
     try:
         directory = glob("../processed_data/*/*.tsv")
-        resultados = []
+        results = []
+        info = []
         for file in directory:
             if re.search(r"_metadata.tsv", file):
-                col_name = acceso_metadata(file)
+                met = access_metadata(file)
+            if re.search(r"_gradient.tsv", file):
+                gra = access_gradient(file)
             df = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
             if "classyfire.kingdom" in df.columns and is_isomeric(df['smiles.std'].iloc[0]):
-                columna = df.filter(regex='classyfire.*')
-                for col in columna.columns:
-                    query = columna[col].str.lower().str.contains(patron.lower(), na=False)
-                    if not df[query].empty and len(resultados) < 5:
-                        resultado = [col_name.values, df[query]]
-                        resultados.append(resultado)
+                column = df.filter(regex=f'{location}', axis=1)
+                column_string=column.select_dtypes(include=['object'])
+                for col in column_string.columns:
+                    query = column[col].str.lower().str.contains(pattern.lower(), na=False)
+                    if not df[query].empty and len(results) < 5:
+                        list = [gra, met, df[query]]
+                        results.append(df[query])
+                        info.append(list)
                         break
-        if resultados:
-            for i in resultados:
-                print(f"\nColumna:{i[0]} \nCaracterísticas molécula:\n {i[1]}")
+        if column.size == 0:
+            print(f"{location} not found")
+        elif results:
+            for i in info:
+                print(f"\nColumn gradient:\n{i[0]} \nColumn info:\n{i[1]} \nMolecule data:\n {i[2]}")
+            #concat = pd.concat(results, axis=0)
+            #print(concat)
         else:
-            print(f'No se han encontrado coincidencias con {patron}')
+            print(f'No matches found with {pattern}')
     except Exception as e:
         print(f"Error:{e}")
 
 
-acceso_data("alcohols")
+access_data("lipids")
+
+
