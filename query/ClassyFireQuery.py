@@ -47,7 +47,7 @@ def access_data(pattern, location=".*"):
             if re.search(r"_descriptors_isomeric_", file):
                 des = access_descriptors(file)
             df = pd.read_csv(file, sep='\t', header=0, encoding='utf-8')
-            if "classyfire.kingdom" in df.columns and is_isomeric(df['smiles.std'].iloc[0]):
+            if "classyfire.kingdom" in df.columns and not is_isomeric(df['smiles.std'].iloc[0]):
                 column = df.filter(regex=f'{location}', axis=1)
                 column_string = column.select_dtypes(include=['object'])
                 for col in column_string.columns:
@@ -71,4 +71,4 @@ def access_data(pattern, location=".*"):
         print(f"Error:{e}")
 
 
-access_data("lipids")
+
