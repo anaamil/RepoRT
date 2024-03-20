@@ -4,6 +4,7 @@ from glob import glob
 
 
 def alternative_parents():
+    """Concatenate data between RepoRT repository and alternative parents data"""
     try:
         directory = glob("../processed_data/*/*.tsv")
         results = []
@@ -26,5 +27,6 @@ def alternative_parents():
             df.to_csv("alternative_parents.tsv", sep="\t", index=False)
     except Exception as e:
         print(f"Error: {e}")
+
 
 alternative_parents()
